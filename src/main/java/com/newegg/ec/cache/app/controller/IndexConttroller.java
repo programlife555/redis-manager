@@ -25,20 +25,19 @@ public class IndexConttroller {
         return Response.Success();
     }
 
-    /**
-     * TODO: 后期会移动
-     */
     @RequestMapping("/pages/createCluster")
     public String accessCreateCluster() {
         return "createCluster";
     }
 
-    /**
-     * TODO: 后期会移动
-     */
     @RequestMapping("/pages/managerCluster")
     public String accessManagerCluster() {
         return "managerCluster";
+    }
+
+    @RequestMapping("/pages/userManage")
+    public String userManager() {
+       return  "userManage";
     }
 
 }

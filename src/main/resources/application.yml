@@ -14,14 +14,21 @@ spring:
   datasource:
       name: serverbase
       driver-class-name: com.mysql.jdbc.Driver
-      url: jdbc:mysql://127.0.0.1:3306/redis_manager_new?useUnicode=true&characterEncoding=utf-8
-      username: test
-      password: test
+      url: jdbc:mysql://10.16.50.209:4000/redis_manager?useUnicode=true&characterEncoding=utf-8
+      username: root
+      password:
+
+  # 如果使用微信报警，填写微信企业号相关信息
   wechat:
-     alarm:
-      url:
-      roleId: 2
-      alarmsize: 200
+
+  # 如果使用邮件报警，在此处开启开关并配置log4j邮件相关信息
+  mail:
+     alarm: false
+     SMTPHost: xx.xx.xx.xx
+     SMTPUsername:
+     SMTPPassword:
+     mailFrom: xxx@qq.com
+     mailTo: xxx@qq.com
 
 mybatis:
   mapper-locations: classpath*:mappers/*
@@ -31,28 +38,28 @@ mybatis:
 cache:
     # redis 客户端用于配置修改什么的,记得安装部署的时候要修改一下权限 chmod 777 redis-cli
     redis.client: ../redis-manager/src/main/resources/public/shell/redis-cli
-    # userapi 自动生成 restful 接口
-    user.api.path: ../redis-manager/src/main/resources/public/core/userApi.js
+    # userapi自动生成 restful 接口,开发时配置 : ../redis-manager/src/main/resources/public/core/userApi.js
+    user.api.path:
     # 自动生成 mysql 表
     mysql:
         scan.package: com.newegg.ec.cache
         # 配置成跟 jdbc 连接的信息一样
-        database.name: redis_manager_new
+        database.name: redis_manager
         # 用于删除 7 天的后的数据
         clearn.day: 7
     # 支持的插件多个可以用逗号隔开
-    plugin: machine,humpback
+    plugin: machine,docker
     # humpback 相关配置
     humpback:
         # 镜像列表, 如果没有humpback，则可为空
-        image: humpback-hub.newegg.org/shec/redis3.0.6:v3,docker.neg/shec/redis-4.0.8:v1
+        image:
         # humpback 操作的 api 接口 %s 是占位符
         api.format: http://%s:8500/dockerapi/v2/
     # docker 相关配置
     docker:
         # docker 镜像需要自己 build
-        image: ssecbigdata02:5000/redis4.0.1
-        # docker api 格式
+        image: reasonduan/redis:4.0.12-alpine,reasonduan/redis:5.0.3-alpine
+      # docker api 格式
         api.format: http://%s:2375/
     # 物理机相关配置
     machine:
@@ -64,5 +71,5 @@ cache:
             # 安装的基础路径
             basepath: redis-cluster/
         # 可以安装的 tar 包
-        image: redis3.0.6.tar,redis-4.0.8.tar
+        image: redis-4.0.10.tar,redis-5.0.2.tar,redis3.0.6.tar
 

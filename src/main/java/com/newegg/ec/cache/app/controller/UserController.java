@@ -1,10 +1,12 @@
 package com.newegg.ec.cache.app.controller;
 
 import com.newegg.ec.cache.app.logic.UserLogic;
-import com.newegg.ec.cache.app.model.Common;
+import com.newegg.ec.cache.app.model.Constants;
 import com.newegg.ec.cache.app.model.Response;
 import com.newegg.ec.cache.app.model.User;
+import com.newegg.ec.cache.app.util.RequestUtil;
 import com.newegg.ec.cache.core.userapi.UserAccess;
+import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -46,7 +48,7 @@ public class UserController {
         if (null != user && user.getPassword().equals(password)) {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             HttpSession session = request.getSession();
-            session.setAttribute(Common.SESSION_USER_KEY, user);
+            session.setAttribute(Constants.SESSION_USER_KEY, user);
             return Response.Success();
         }
         return Response.Error("用户名或密码填写有误");
@@ -57,7 +59,7 @@ public class UserController {
     public Response logout() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         HttpSession session = request.getSession();
-        session.removeAttribute(Common.SESSION_USER_KEY);
+        session.removeAttribute(Constants.SESSION_USER_KEY);
         return Response.Info("logout");
     }
 
@@ -73,33 +75,46 @@ public class UserController {
     public Response autoGetUser() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         HttpSession session = request.getSession();
-        User user = (User) session.getAttribute(Common.SESSION_USER_KEY);
+        User user = (User) session.getAttribute(Constants.SESSION_USER_KEY);
         return Response.Result(0, user);
     }
 
     @RequestMapping(value = "/addUser", method = RequestMethod.POST)
     @ResponseBody
-    public Response addUser(@RequestBody User user) {
-        boolean res = logic.addUser(user);
-        return Response.Result(0, res);
+    public Response addUser(@RequestBody JSONObject user) {
+
+       if("admin".equals(RequestUtil.getUser().getUsername())) {
+           boolean res = logic.addUser(user);
+           return Response.Result(0, res);
+       }else {
+           return Response.Warn("Illegal Operation");
+       }
+
     }
 
     @RequestMapping(value = "/removeUser", method = RequestMethod.GET)
     @ResponseBody
     public Response removeUser(@RequestParam int id) {
-        boolean res = logic.removeUser(id);
-        return Response.Result(0, res);
+
+        if("admin".equals(RequestUtil.getUser().getUsername())) {
+            boolean res = logic.removeUser(id);
+            return Response.Result(0, res);
+        }else {
+            return Response.Warn("Illegal Operation");
+        }
+
     }
 
     @RequestMapping(value = "/listGroup", method = RequestMethod.GET)
     @ResponseBody
-    public Response listGroup(@SessionAttribute(Common.SESSION_USER_KEY) User user) {
+    public Response listGroup(@SessionAttribute(Constants.SESSION_USER_KEY) User user) {
         List<String> list = new ArrayList<>();
-        if (user.getUserGroup().equals(Common.ADMIN_GROUP)) {
+        if (user.getUserGroup().equals(Constants.ADMIN_GROUP)) {
             list = logic.getGroups();
         } else {
             list.add(user.getUserGroup());
         }
         return Response.Result(0, list);
     }
+
 }

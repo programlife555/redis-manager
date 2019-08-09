@@ -6,7 +6,7 @@ $(document).ready(function(){
 
 // query dbx
 $(document).on("click", "#query-db", function(){
-    smarty.fopen( "/cluster/redisDbList?address="+window.address, "monitor/redis_query", true, { title: "Query", width:800, height:500},  function(obj){
+    smarty.fopen( "/cluster/redisDbList?clusterId="+window.clusterId+"&address="+window.address, "monitor/redis_query", true, { title: "Query", width:800, height:500},  function(obj){
         var db = parseInt($(".db-list li").eq(0).find("a").attr("data-db"));
         $("#query-key").attr("data-db", db);
         $(".db-dropdown").html('db' + db + '<span class="caret"></span>');
@@ -27,7 +27,6 @@ $("body").delegate("#query-key", "click", function(){
         db = parseInt($(".db-list li").eq(0).find("a").attr("data-db"));
         $("#query-key").attr("data-db", db);
         $(".db-dropdown").html('db' + db + '<span class="caret"></span>');
-        alert("555")
     }
     console.log(db)
     query(db)
@@ -36,12 +35,17 @@ $("body").delegate("#query-key", "click", function(){
 function query(db){
     var queryKey = $("#query-input").val();
     var redisQueryParam = new Object;
+    redisQueryParam.clusterId = window.clusterId;
     redisQueryParam.address = window.address;
     redisQueryParam.db = db;
     redisQueryParam.key = queryKey || "*";
     redisQuery(redisQueryParam, function(obj){
-        var result = obj.res;
-        console.log(result)
-        $("#show-result").html(syntaxHighlightRedisResult(result));
+        var  result = obj.res;
+        if((parseInt(result.ttl) <=  0) && (result.type == "" || result.type == undefined || result.type == "none")){
+          $("#show-result").html(syntaxHighlightRedisResult(result.redisValue));
+        }else{
+          $("#show-result").html(syntaxHighlightRedisResult(result));
+        }
+
     })
 }

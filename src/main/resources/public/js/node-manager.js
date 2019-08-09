@@ -3,21 +3,21 @@ $(document).ready(function(){
     window.clusterId = getQueryString("clusterId");
     getCluster(clusterId, function(obj){
         var cluster = obj.res;
-        nodeList(cluster.address, function(obj){
+        nodeList(clusterId, cluster.address, function(obj){
             window.nodeList = obj.res;
             rebuildNodeListTable( window.clusterId );
         });
 
         getNodeList(window.pluginType, window.clusterId, function(obj){
-            console.log( obj );
             window.nodeListDBSize = obj.res.length;
         });
     });
 });
 
 function rebuildNodeListTable(){
-    smarty.get( "/node/getNodeList?pluginType="+ window.pluginType  +"&clusterId=" + window.clusterId , "plugin/" + window.pluginType + "/" + window.pluginType + "_mode_manager", "node-list", function(){
-        $("table").dataTable({});
+    smarty.get( "/node/getNodeList?pluginType="+ window.pluginType  +"&clusterId=" + window.clusterId , "plugin/" + window.pluginType + "/" + window.pluginType + "_mode_manager", "node-list", function(obj){
+        /*$("table").dataTable({
+        });*/
     }, true );
 }
 
@@ -43,6 +43,7 @@ $(document).on("click", ".start-node", function(){
 
 $(document).on("click", ".stop-node", function(){
     var reqParam = getReqParam( this );
+    reqParam.clusterId = window.clusterId;
     if( reqParam.inCluster == "YES" && window.nodeListDBSize != 1 ){
         sparrow_win.alert("The node is in cluster please forget it then retry");
         return;
@@ -91,7 +92,7 @@ $(document).on("click", ".import-node-to-cluster", function(){
             var tmps = hostArr[0].split(":");
             var masterIp = tmps[0];
             var masterPort = tmps[1];
-            importNode(nodeDetail.ip, nodeDetail.port,masterIp,masterPort, function(){
+            importNode(cluster.id, nodeDetail.ip, nodeDetail.port,masterIp,masterPort, function(){
                 $("[href='#node-list']").trigger("click");
             });
         });

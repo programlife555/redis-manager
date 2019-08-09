@@ -3,20 +3,55 @@ package com.newegg.ec.cache.app.util;
 
 import com.newegg.ec.cache.app.model.Host;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 /**
  * Created by lzz on 2018/2/5.
  */
 public class NetUtil {
+
+    private static final Log logger = LogFactory.getLog(NetUtil.class);
+
     public static String getLocalIp() throws UnknownHostException {
         String ip = InetAddress.getLocalHost().getHostAddress();
         return ip;
+    }
+
+    public static String getHostIp() {
+
+        String sIP = "";
+        InetAddress ip = null;
+        try {
+            boolean bFindIP = false;
+            Enumeration<NetworkInterface> netInterfaces = NetworkInterface.getNetworkInterfaces();
+            while (netInterfaces.hasMoreElements()) {
+                if (bFindIP)
+                    break;
+                NetworkInterface ni = netInterfaces.nextElement();
+                Enumeration<InetAddress> ips = ni.getInetAddresses();
+                while (ips.hasMoreElements()) {
+                    ip = ips.nextElement();
+                    if (!ip.isLoopbackAddress()
+                            && ip.getHostAddress().matches("(\\d{1,3}\\.){3}\\d{1,3}")) {
+                        bFindIP = true;
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (null != ip)
+            sIP = ip.getHostAddress();
+        return sIP;
     }
 
     public static long pingTime(String ip) throws IOException {
@@ -126,11 +161,17 @@ public class NetUtil {
 
     public static Host getHost(String hostStr) {
         Host host = new Host();
-        String[] tmp = hostStr.split(":");
-        String ip = tmp[0];
-        int port = Integer.parseInt(tmp[1]);
-        host.setIp(ip);
-        host.setPort(port);
+
+        try{
+            String[] tmp = hostStr.split(":");
+            String ip = tmp[0];
+            int port = Integer.parseInt(tmp[1]);
+            host.setIp(ip);
+            host.setPort(port);
+        }catch (ArrayIndexOutOfBoundsException e){
+            logger.error("HostStr: " + hostStr + ", node format error : " + e.getMessage());
+        }
+
         return host;
     }
 

@@ -2,6 +2,7 @@ package com.newegg.ec.cache.plugin.docker;
 
 import com.google.common.collect.Lists;
 import com.newegg.ec.cache.app.controller.check.CheckLogic;
+import com.newegg.ec.cache.app.logic.ClusterLogic;
 import com.newegg.ec.cache.app.model.RedisNode;
 import com.newegg.ec.cache.app.model.Response;
 import com.newegg.ec.cache.app.util.DateUtil;
@@ -35,11 +36,15 @@ import java.util.concurrent.Future;
 public class DockerManager extends PluginParent implements INodeOperate {
 
     static ExecutorService executorService = Executors.newFixedThreadPool(100);
-    private static CommonLogger logger = new CommonLogger(DockerManager.class);
+    private static final CommonLogger logger = new CommonLogger(DockerManager.class);
     @Autowired
     IDockerNodeDao dockerNodeDao;
     @Resource
     CheckLogic checkLogic;
+
+    @Resource
+    ClusterLogic clusterLogic;
+
     @Value("${cache.docker.api.format}")
     private String dockerApiFormat;
     @Value("${cache.docker.image}")
@@ -94,9 +99,9 @@ public class DockerManager extends PluginParent implements INodeOperate {
         List<Future<Boolean>> futureList = new ArrayList<>();
         nodelist.forEach(node -> {
             String ip = String.valueOf(node.getIp());
-            String port = String.valueOf(node.getPort());
+            int port = Integer.valueOf(node.getPort());
             String image = reqParam.getString("image");
-            String name = reqParam.getString("containerName");
+            String name = formatContainerName(reqParam.getString("containerName"), port);
             String command = ip + " " + port;
             JSONObject installObject = generateInstallObject(image, name, command);
             futureList.add(executorService.submit(new RedisInstallTask(ip, installObject)));
@@ -109,6 +114,14 @@ public class DockerManager extends PluginParent implements INodeOperate {
             }
         }
         logger.websocket("redis cluster node install success");
+    }
+
+    @Override
+    protected void auth(String ipListStr, String redisPassword) {
+        List<RedisNode> nodelist = JedisUtil.getInstallNodeList(ipListStr);
+        nodelist.forEach(node -> {
+            clusterLogic.addRedisPassd(node.getIp(), node.getPort(),redisPassword);
+        });
     }
 
     @Override
@@ -175,9 +188,14 @@ public class DockerManager extends PluginParent implements INodeOperate {
     @Override
     public boolean remove(JSONObject removePram) {
         logger.websocket(removePram.toString());
+        int id = removePram.getInt("id");
         String ip = removePram.getString("ip");
         String containerName = removePram.getString("containerName");
-        return deleteContainer(ip, containerName);
+        boolean isDelete = deleteContainer(ip, containerName);
+        if (isDelete) {
+            dockerNodeDao.removeDockerNode(id);
+        }
+        return isDelete;
     }
 
 
@@ -324,11 +342,11 @@ public class DockerManager extends PluginParent implements INodeOperate {
     }
 
     private String getContainerApi(String ip) {
-        return getDockerRestfullApi(ip) + "/containers";
+        return getDockerRestfullApi(ip) + "containers";
     }
 
     private String getImageApi(String ip) {
-        return getDockerRestfullApi(ip) + "/images";
+        return getDockerRestfullApi(ip) + "images";
     }
 
     private String getDockerRestfullApi(String ip) {

@@ -16,14 +16,15 @@ public class Cluster {
     private String userGroup;
     @MysqlField(field = "address", type = "varchar(255)", notNull = true)
     private String address;
-    @MysqlField(field = "redisPassword", type = "varchar(255)", notNull = false)
+    @MysqlField(field = "redis_password", type = "varchar(255)", notNull = false)
     private String redisPassword;
-    @MysqlField(field = "ssl_username", type = "varchar(64)", notNull = false)
-    private String sslUsername;
-    @MysqlField(field = "ssl_password", type = "varchar(64)", notNull = false)
-    private String sslPassword;
     @MysqlField(field = "cluster_type", type = "varchar(10)", notNull = true)
     private String clusterType;
+
+    /**
+     * 非数据库字段，只是为了前台展示
+     */
+    private boolean isVersion4 = false;
 
     public int getId() {
         return id;
@@ -65,28 +66,20 @@ public class Cluster {
         this.redisPassword = redisPassword;
     }
 
-    public String getSslUsername() {
-        return sslUsername;
-    }
-
-    public void setSslUsername(String sslUsername) {
-        this.sslUsername = sslUsername;
-    }
-
-    public String getSslPassword() {
-        return sslPassword;
-    }
-
-    public void setSslPassword(String sslPassword) {
-        this.sslPassword = sslPassword;
-    }
-
     public String getClusterType() {
         return clusterType;
     }
 
     public void setClusterType(String clusterType) {
         this.clusterType = clusterType;
+    }
+
+    public boolean isVersion4() {
+        return isVersion4;
+    }
+
+    public void setIsVersion4(boolean isVersion4) {
+        this.isVersion4 = isVersion4;
     }
 
     @Override
@@ -97,9 +90,9 @@ public class Cluster {
                 ", userGroup='" + userGroup + '\'' +
                 ", address='" + address + '\'' +
                 ", redisPassword='" + redisPassword + '\'' +
-                ", sslUsername='" + sslUsername + '\'' +
-                ", sslPassword='" + sslPassword + '\'' +
                 ", clusterType='" + clusterType + '\'' +
+                ", isVersion4=" + isVersion4 +
                 '}';
     }
+
 }

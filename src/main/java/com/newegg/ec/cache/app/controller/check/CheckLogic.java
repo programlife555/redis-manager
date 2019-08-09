@@ -1,10 +1,7 @@
 package com.newegg.ec.cache.app.controller.check;
 
 import com.newegg.ec.cache.app.logic.ClusterLogic;
-import com.newegg.ec.cache.app.model.Cluster;
-import com.newegg.ec.cache.app.model.Host;
-import com.newegg.ec.cache.app.model.Response;
-import com.newegg.ec.cache.app.model.User;
+import com.newegg.ec.cache.app.model.*;
 import com.newegg.ec.cache.app.util.JedisUtil;
 import com.newegg.ec.cache.app.util.NetUtil;
 import com.newegg.ec.cache.app.util.RemoteShellUtil;
@@ -23,7 +20,7 @@ import java.util.Set;
  */
 @Component
 public class CheckLogic {
-    public static CommonLogger logger = new CommonLogger(CheckLogic.class);
+    public static  final CommonLogger logger = new CommonLogger(CheckLogic.class);
     @Autowired
     private ClusterLogic clusterLogic;
 
@@ -31,9 +28,11 @@ public class CheckLogic {
         return logger.websocket(msg) + "<br>";
     }
 
-    public int checkRedisVersion(String address) {
+    public int checkRedisVersion(int clusterId, String address) {
         Host host = NetUtil.getHostPassAddress(address);
-        int version = JedisUtil.getRedisVersion(host.getIp(), host.getPort());
+        Cluster cluster = clusterLogic.getCluster(clusterId);
+        ConnectionParam param = new ConnectionParam(host.getIp(), host.getPort(), cluster.getRedisPassword());
+        int version = JedisUtil.getRedisVersion(param);
         return version;
     }
 
@@ -199,7 +198,7 @@ public class CheckLogic {
     }
 
     public String getCheckDirPermission(String installPath) {
-        return "if [ ! -w '" + installPath + "' ];then echo '" + installPath + " without permision <br>'; fi";
+        return "if [ ! -w '" + installPath + "' ];then echo '" + installPath + " without permission <br>'; fi";
     }
 
     public String getCheckDirExist(String installPath) {
